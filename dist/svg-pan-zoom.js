@@ -1077,6 +1077,39 @@ SvgPanZoom.prototype.destroy = function() {
 }
 
 /**
+ * Recalculates cached svg dimensions and controls position
+ *
+ * @param  {ISVGRect} box
+ */
+SvgPanZoom.prototype.frame = function(box) {
+
+  var frame = this.viewport.getViewBox(),
+    // check required zoom levels for each dimension
+    zoomY = frame.height / box.height,
+    zoomX = frame.width / box.width,
+    // set defaults
+    zoom = 1,
+    y = box.y,
+    x = box.x;
+
+  // test which dimension zooms less and use that zoom level
+  if (zoomX > zoomY) {
+    zoom = zoomY;
+    // add an offset so the box is centred in x
+    x = x - ((frame.width / zoom) - box.width) / 2;
+  }  else {
+    zoom = zoomX;
+    // add an offset so the box is centred in y
+    y = y - ((frame.height / zoom) - box.height) / 2;
+  }
+
+  // pan and zoom
+  this.getPublicInstance().pan({x: -x, y: -y});
+  this.getPublicInstance().zoomAtPointBy(zoom, {x: 0, y: 0})
+}
+
+
+/**
  * Returns a public instance object
  *
  * @return {Object} Public instance object
@@ -1146,6 +1179,7 @@ SvgPanZoom.prototype.getPublicInstance = function() {
       // Fit and Center
     , fit: function() {that.fit(); return that.pi}
     , center: function() {that.center(); return that.pi}
+    , frame: function(args) {that.frame(args); return that.pi}
       // Size and Resize
     , updateBBox: function() {that.updateBBox(); return that.pi}
     , resize: function() {that.resize(); return that.pi}
